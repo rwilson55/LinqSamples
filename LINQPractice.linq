@@ -1,7 +1,6 @@
-<Query Kind="Expression">
+<Query Kind="Statements">
   <Connection>
     <ID>c87ac79b-50bd-4bf0-a9c6-0a50e51489c7</ID>
-    <Persist>true</Persist>
     <Server>.</Server>
     <Database>Chinook</Database>
   </Connection>
@@ -39,8 +38,49 @@ select new{
 		AverageTrackLengthInSecondsB = (x.Tracks.Average(y => y.Milliseconds / 1000)) 
 }
 
-from x in MediaTypes
-select new {
-		Name = x.Name,
-		NumberOfTracks = x.Tracks.Max(y => y.MediaTypeId)
-}
+//when you need to use multiple steps to solve a problem,
+//switch your language choice to either Statement(s) or Program
+
+//the results of each query will now be saved in a variable
+//the variable can then be used in future queries
+
+var maxcount = (from x in MediaTypes
+	select x.Tracks.Count()).Max();
+	
+//to display the contents of a variable in LinqPad
+// you use the method .Dump()
+maxcount.Dump();
+
+//use a value in a preceding created variable
+var popularMediaType = from x in MediaTypes
+						where x.Tracks.Count() == maxcount
+						select new{
+									Type = x.Name,
+									TCount = x.Tracks.Count()
+						};
+popularMediaType.Dump();
+
+//Can this set of statements be done as one complete query?
+//the answer is "possibly" and, in this case, "yes"
+//in this example maxcount could be exchanged for the query that 
+// 	actually created the value in the first place
+//	and this substituted query is a subquery
+
+var popularMediaTypeSubQuery = from x in MediaTypes
+						where x.Tracks.Count() == (from y in MediaTypes
+													select y.Tracks.Count()).Max()
+						select new{
+									Type = x.Name,
+									TCount = x.Tracks.Count()
+						};
+popularMediaTypeSubQuery.Dump();
+
+//using the method syntax to determine the count value for the where expression
+//this demonstrates that queries can be constructed using both query syntax and method syntax
+var popularMediaTypeSubMethod = from x in MediaTypes
+						where x.Tracks.Count() == MediaTypes.Select(mt => mt.Tracks.Count()).Max()
+						select new{
+									Type = x.Name,
+									TCount = x.Tracks.Count()
+						};
+popularMediaTypeSubMethod.Dump();
